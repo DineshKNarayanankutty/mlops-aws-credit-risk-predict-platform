@@ -1,0 +1,112 @@
+############################################
+# Terraform Core
+############################################
+
+# Local .terraform directories
+.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config files
+.terraformrc
+terraform.rc
+
+############################################
+# Terraform Plan Files
+############################################
+
+*.tfplan
+plan.out
+
+############################################
+# Variable Files (Sensitive)
+############################################
+
+# DO NOT commit local environment secrets
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Local-only overrides
+terraform.local.tfvars
+*.local.tfvars
+
+############################################
+# Environment Variable Files
+############################################
+
+.env
+.env.*
+!.env.example
+
+############################################
+# AWS Credentials
+############################################
+
+.aws/
+aws-credentials
+credentials
+
+############################################
+# IDE / Editor
+############################################
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+
+############################################
+# macOS
+############################################
+
+.DS_Store
+
+############################################
+# Windows
+############################################
+
+Thumbs.db
+Desktop.ini
+
+############################################
+# Logs
+############################################
+
+*.log
+
+############################################
+# Node (if you ever add tooling)
+############################################
+
+node_modules/
+
+############################################
+# Python (if you add helper scripts)
+############################################
+
+__pycache__/
+*.pyc
+*.pyo
+
+############################################
+# Helm Charts (if templated locally)
+############################################
+
+charts/*/charts/
+charts/*/tmp/
