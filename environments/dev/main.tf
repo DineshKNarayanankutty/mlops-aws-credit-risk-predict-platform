@@ -35,7 +35,7 @@ module "ecr" {
 
 module "s3" {
   source      = "../../modules/s3"
-  bucket_name = "mlops-dev-artifacts-bucket777"
+  bucket_name = local.cicd_artifact_bucket_name
   tags        = local.common_tags
 }
 
@@ -44,7 +44,7 @@ module "sagemaker" {
 
   environment                 = var.environment
   model_package_group_name    = var.model_package_group_name
-  model_artifacts_bucket_name = var.sagemaker_model_artifacts_bucket_name
+  model_artifacts_bucket_name = local.sagemaker_model_artifacts_bucket_name
   ecr_repository_arn          = module.ecr.repository_arn
   tags                        = local.common_tags
 }
@@ -57,7 +57,7 @@ module "iam" {
   oidc_provider_arn                   = module.eks.oidc_provider_arn
   oidc_provider_url                   = module.eks.oidc_provider
   ecr_repository_arn                  = module.ecr.repository_arn
-  artifact_bucket_name                = var.cicd_artifact_bucket_name
+  artifact_bucket_name                = local.cicd_artifact_bucket_name
   model_artifacts_bucket_arn          = module.sagemaker.model_artifacts_bucket_arn
   model_artifacts_kms_key_arn         = module.sagemaker.model_artifacts_kms_key_arn
   training_data_bucket_arn            = local.training_data_bucket_arn
@@ -73,7 +73,7 @@ module "cicd" {
   source = "../../modules/cicd"
 
   environment                 = var.environment
-  artifact_bucket_name        = var.cicd_artifact_bucket_name
+  artifact_bucket_name        = local.cicd_artifact_bucket_name
   codebuild_role_arn          = module.iam.codebuild_role_arn
   codepipeline_role_arn       = module.iam.codepipeline_role_arn
   code_connection_arn         = var.code_connection_arn
@@ -81,8 +81,8 @@ module "cicd" {
   github_branch               = var.github_branch
   ecr_repository_url          = module.ecr.repository_url
   sagemaker_training_role_arn = module.iam.sagemaker_training_role_arn
-  training_input_s3_uri       = var.training_input_s3_uri
-  training_output_s3_uri      = var.training_output_s3_uri
+  training_input_s3_uri       = local.training_input_s3_uri
+  training_output_s3_uri      = local.training_output_s3_uri
   tags                        = local.common_tags
 }
 
@@ -125,14 +125,4 @@ module "monitoring" {
   depends_on = [module.alb_controller]
 }
 
-locals {
-  training_data_bucket_name = split("/", trimprefix(var.training_input_s3_uri, "s3://"))[0]
-  training_data_bucket_arn  = "arn:aws:s3:::${local.training_data_bucket_name}"
 
-  common_tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Owner       = "platform-team"
-  }
-}
