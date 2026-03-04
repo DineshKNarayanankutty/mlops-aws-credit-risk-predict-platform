@@ -110,3 +110,8 @@ __pycache__/
 
 charts/*/charts/
 charts/*/tmp/
+
+############################################
+# Scripts of tf vars (automation)
+############################################
+scripts/
