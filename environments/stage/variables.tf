@@ -66,14 +66,6 @@ variable "model_package_group_name" {
   type = string
 }
 
-variable "sagemaker_model_artifacts_bucket_name" {
-  type = string
-}
-
-variable "cicd_artifact_bucket_name" {
-  type = string
-}
-
 variable "code_connection_arn" {
   type = string
 }
@@ -85,14 +77,6 @@ variable "github_full_repository_id" {
 variable "github_branch" {
   type    = string
   default = "main"
-}
-
-variable "training_input_s3_uri" {
-  type = string
-}
-
-variable "training_output_s3_uri" {
-  type = string
 }
 
 variable "inference_namespace" {
