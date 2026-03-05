@@ -58,7 +58,7 @@ variable "inference_node_instance_type" {
 
 variable "cluster_endpoint_public_access" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "cluster_endpoint_private_access" {
@@ -67,14 +67,6 @@ variable "cluster_endpoint_private_access" {
 }
 
 variable "model_package_group_name" {
-  type = string
-}
-
-variable "sagemaker_model_artifacts_bucket_name" {
-  type = string
-}
-
-variable "cicd_artifact_bucket_name" {
   type = string
 }
 
@@ -89,14 +81,6 @@ variable "github_full_repository_id" {
 variable "github_branch" {
   type    = string
   default = "main"
-}
-
-variable "training_input_s3_uri" {
-  type = string
-}
-
-variable "training_output_s3_uri" {
-  type = string
 }
 
 variable "inference_namespace" {
