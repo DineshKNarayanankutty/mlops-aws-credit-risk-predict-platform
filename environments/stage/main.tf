@@ -87,7 +87,7 @@ module "cicd" {
 }
 
 module "alb_controller" {
-  count  = local.enable_alb_controller ? 1 : 0
+  count  = local.enable_alb_controller && var.enable_in_cluster_addons ? 1 : 0
   source = "../../modules/alb_controller"
 
   cluster_name              = module.eks.cluster_name
@@ -107,7 +107,7 @@ module "alb_controller" {
 }
 
 module "monitoring" {
-  count  = local.enable_monitoring ? 1 : 0
+  count  = local.enable_monitoring && var.enable_in_cluster_addons ? 1 : 0
   source = "../../modules/monitoring"
 
   cluster_name                 = module.eks.cluster_name
