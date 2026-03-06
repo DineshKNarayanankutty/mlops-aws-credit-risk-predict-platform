@@ -132,6 +132,11 @@ terraform plan
 
 # Apply
 terraform apply
+
+# Stage/Prod default to private-only EKS endpoints.
+# Local runs should keep in-cluster addons disabled (default).
+# To deploy ALB controller + monitoring, run from a VPC-connected runner:
+terraform apply -var="enable_in_cluster_addons=true"
 ```
 
 ---
@@ -199,7 +204,7 @@ Installs the monitoring stack via Helm with feature toggles for each component:
 - CI/CD artifact buckets use KMS encryption with key rotation enabled
 - EKS secrets are encrypted via a cluster-managed KMS key
 - IRSA (IAM Roles for Service Accounts) used throughout — no static credentials on pods
-- EKS API server endpoint access is private-only in stage
+- EKS API server endpoint access is private-only in stage and prod by default
 
 ---
 
