@@ -74,8 +74,7 @@ locals {
     }
   )
 
-  create_cluster_autoscaler    = var.environment == "prod"
-  system_node_group_subnet_ids = var.environment == "dev" ? [var.private_subnets[0]] : null
+  create_cluster_autoscaler = var.environment == "prod"
 }
 
 resource "aws_security_group" "alb_backend" {
@@ -140,39 +139,43 @@ module "eks" {
 
   eks_managed_node_groups = merge(
     {
-      system = {
-        instance_types = [local.node_group_profile.system_instance_type]
+      system = merge(
+        {
+          instance_types = [local.node_group_profile.system_instance_type]
 
-        ami_type      = "AL2023_x86_64_STANDARD"
-        capacity_type = "ON_DEMAND"
+          ami_type      = "AL2023_x86_64_STANDARD"
+          capacity_type = "ON_DEMAND"
 
-        min_size     = local.node_group_profile.system_min_size
-        max_size     = local.node_group_profile.system_max_size
-        desired_size = local.node_group_profile.system_desired_size
-        subnet_ids   = local.system_node_group_subnet_ids
+          min_size     = local.node_group_profile.system_min_size
+          max_size     = local.node_group_profile.system_max_size
+          desired_size = local.node_group_profile.system_desired_size
 
-        block_device_mappings = {
-          xvda = {
-            device_name = "/dev/xvda"
-            ebs = {
-              volume_size           = local.node_group_profile.system_root_volume_size
-              volume_type           = "gp3"
-              encrypted             = true
-              kms_key_id            = aws_kms_key.node_ebs.arn
-              delete_on_termination = true
+          block_device_mappings = {
+            xvda = {
+              device_name = "/dev/xvda"
+              ebs = {
+                volume_size           = local.node_group_profile.system_root_volume_size
+                volume_type           = "gp3"
+                encrypted             = true
+                kms_key_id            = aws_kms_key.node_ebs.arn
+                delete_on_termination = true
+              }
             }
           }
-        }
 
-        labels = {
-          "node-role" = "system"
-        }
+          labels = {
+            "node-role" = "system"
+          }
 
-        tags = local.create_cluster_autoscaler ? {
-          "k8s.io/cluster-autoscaler/enabled"             = "true"
-          "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+          tags = local.create_cluster_autoscaler ? {
+            "k8s.io/cluster-autoscaler/enabled"             = "true"
+            "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+          } : {}
+        },
+        var.environment == "dev" ? {
+          subnet_ids = [var.private_subnets[0]]
         } : {}
-      }
+      )
     },
     local.node_group_profile.create_inference ? {
       inference = {
@@ -418,4 +421,3 @@ resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
   role       = aws_iam_role.cluster_autoscaler[0].name
   policy_arn = aws_iam_policy.cluster_autoscaler[0].arn
 }
-
