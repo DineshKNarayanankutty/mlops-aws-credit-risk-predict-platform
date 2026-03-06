@@ -66,6 +66,12 @@ variable "cluster_endpoint_private_access" {
   default = true
 }
 
+variable "enable_in_cluster_addons" {
+  type        = bool
+  default     = false
+  description = "Deploy in-cluster addons (Helm/Kubernetes resources) such as ALB Controller and monitoring. Keep false for local runs against private-only EKS endpoints."
+}
+
 variable "model_package_group_name" {
   type = string
 }
