@@ -34,7 +34,7 @@ module "ecr" {
 
 module "s3" {
   source      = "../../modules/s3"
-  bucket_name = local.cicd_artifact_bucket_name
+  bucket_name = local.platform_artifact_bucket_name
   tags        = local.common_tags
 }
 
@@ -123,3 +123,4 @@ module "monitoring" {
 
   depends_on = [module.alb_controller]
 }
+
