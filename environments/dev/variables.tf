@@ -1,126 +1,157 @@
 variable "region" {
-  type = string
+  description = "AWS region"
+  type        = string
 }
 
 variable "environment" {
-  type    = string
-  default = "dev"
+  description = "Deployment environment"
+  type        = string
+  default     = "dev"
 }
 
 variable "project_name" {
-  type    = string
-  default = "mlops-platform"
+  description = "Project name used in naming and tagging"
+  type        = string
+  default     = "mlops-platform"
 }
 
 variable "vpc_cidr" {
-  type    = string
-  default = "10.0.0.0/16"
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
 }
 
 variable "public_subnet_cidrs" {
-  type = list(string)
-  default = [
-    "10.0.1.0/24",
-    "10.0.2.0/24"
-  ]
+  description = "CIDR blocks for public subnets"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
 variable "private_subnet_cidrs" {
-  type = list(string)
-  default = [
-    "10.0.101.0/24",
-    "10.0.102.0/24"
-  ]
+  description = "CIDR blocks for private subnets"
+  type        = list(string)
+  default     = ["10.0.101.0/24", "10.0.102.0/24"]
 }
 
 variable "cluster_name" {
-  type = string
+  description = "EKS cluster name"
+  type        = string
 }
 
 variable "cluster_version" {
-  type    = string
-  default = "1.35"
+  description = "Kubernetes version for the EKS cluster"
+  type        = string
+  default     = "1.31"
 }
 
 variable "node_instance_type" {
-  type    = string
-  default = "t3.small"
+  description = "EC2 instance type for system node group"
+  type        = string
+  default     = "t3.medium"
 }
 
 variable "inference_node_instance_type" {
-  type    = string
-  default = "t3.small"
+  description = "EC2 instance type for inference node group"
+  type        = string
+  default     = "t3.large"
 }
 
 variable "cluster_endpoint_public_access" {
-  type    = bool
-  default = false
+  description = "Enable public access to EKS API endpoint"
+  type        = bool
+  default     = false
 }
 
 variable "cluster_endpoint_private_access" {
-  type    = bool
-  default = true
+  description = "Enable private access to EKS API endpoint"
+  type        = bool
+  default     = true
+}
+
+# FIX: Restrict public API endpoint to specific CIDRs
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "List of CIDRs allowed to reach the public EKS API endpoint"
+  type        = list(string)
+  default     = []
 }
 
 variable "model_package_group_name" {
-  type = string
+  description = "SageMaker model package group name"
+  type        = string
 }
 
 variable "code_connection_arn" {
-  type = string
+  description = "ARN of the CodeStar Connection to GitHub"
+  type        = string
 }
 
 variable "github_full_repository_id" {
-  type = string
+  description = "GitHub repository ID (org/repo)"
+  type        = string
 }
 
 variable "github_branch" {
-  type    = string
-  default = "main"
+  description = "GitHub branch to trigger the pipeline"
+  type        = string
+  default     = "main"
 }
 
 variable "inference_namespace" {
-  type    = string
-  default = "inference"
+  description = "Kubernetes namespace for inference workloads"
+  type        = string
+  default     = "inference"
 }
 
 variable "inference_service_account_name" {
-  type    = string
-  default = "inference-service"
+  description = "Kubernetes service account for inference pods"
+  type        = string
+  default     = "inference-service"
 }
 
 variable "alb_controller_namespace" {
-  type    = string
-  default = "kube-system"
+  description = "Kubernetes namespace for the ALB controller"
+  type        = string
+  default     = "kube-system"
 }
 
 variable "alb_controller_service_account_name" {
-  type    = string
-  default = "aws-load-balancer-controller"
+  description = "Kubernetes service account for the ALB controller"
+  type        = string
+  default     = "aws-load-balancer-controller"
 }
 
 variable "alb_controller_chart_version" {
-  type    = string
-  default = "1.11.0"
+  description = "Helm chart version for the AWS Load Balancer Controller"
+  type        = string
+  default     = "1.11.0"
 }
 
 variable "monitoring_namespace" {
-  type    = string
-  default = "monitoring"
+  description = "Kubernetes namespace for monitoring components"
+  type        = string
+  default     = "monitoring"
 }
 
 variable "prometheus_chart_version" {
-  type    = string
-  default = "25.30.0"
+  description = "Helm chart version for Prometheus"
+  type        = string
+  default     = "25.30.0"
 }
 
 variable "grafana_chart_version" {
-  type    = string
-  default = "8.10.0"
+  description = "Helm chart version for Grafana"
+  type        = string
+  default     = "8.10.0"
 }
 
 variable "metrics_server_chart_version" {
-  type    = string
-  default = "3.13.0"
+  description = "Helm chart version for metrics-server"
+  type        = string
+  default     = "3.13.0"
 }
 
+variable "model_quality_roc_auc_min" {
+  description = "Minimum acceptable ROC-AUC for model promotion gate"
+  type        = number
+  default     = 0.75
+}
