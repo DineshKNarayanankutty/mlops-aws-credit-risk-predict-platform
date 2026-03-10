@@ -1,13 +1,13 @@
 data "aws_caller_identity" "current" {}
 
 locals {
+  ecr_repository_name = "${var.project_name}-${var.environment}-inference"
+
   sagemaker_model_artifacts_bucket_name = "${var.project_name}-${var.environment}-model-artifacts-${data.aws_caller_identity.current.account_id}"
+  cicd_artifact_bucket_name             = "${var.project_name}-${var.environment}-cicd-artifacts-${data.aws_caller_identity.current.account_id}"
+  platform_artifact_bucket_name         = "${var.project_name}-${var.environment}-artifacts-${data.aws_caller_identity.current.account_id}"
 
-  cicd_artifact_bucket_name     = "${var.project_name}-${var.environment}-cicd-artifacts-${data.aws_caller_identity.current.account_id}"
-  platform_artifact_bucket_name = "${var.project_name}-${var.environment}-artifacts-${data.aws_caller_identity.current.account_id}"
-
-  training_input_s3_uri = "s3://${local.platform_artifact_bucket_name}/training/input/"
-
+  training_input_s3_uri  = "s3://${local.platform_artifact_bucket_name}/training/input/"
   training_output_s3_uri = "s3://${local.platform_artifact_bucket_name}/training/output/"
 
   training_data_bucket_name = local.platform_artifact_bucket_name
@@ -20,4 +20,3 @@ locals {
     Owner       = "platform-team"
   }
 }
-
