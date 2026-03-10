@@ -3,6 +3,7 @@ module "vpc" {
 
   environment          = var.environment
   project_name         = var.project_name
+  cluster_name         = var.cluster_name   # FIX C-07: needed for subnet discovery tags
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
@@ -21,13 +22,15 @@ module "eks" {
   inference_node_instance_type    = var.inference_node_instance_type
   cluster_endpoint_public_access  = var.cluster_endpoint_public_access
   cluster_endpoint_private_access = var.cluster_endpoint_private_access
-  tags                            = local.common_tags
+  # FIX: Restrict public API endpoint to known CIDRs (set in tfvars)
+  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
+  tags                                 = local.common_tags
 }
 
 module "ecr" {
   source = "../../modules/ecr"
 
-  repository_name = "mlops-dev-inference"
+  repository_name = local.ecr_repository_name
   environment     = var.environment
   project_name    = var.project_name
   tags            = local.common_tags
@@ -66,6 +69,7 @@ module "iam" {
   inference_service_account_name      = var.inference_service_account_name
   alb_controller_namespace            = var.alb_controller_namespace
   alb_controller_service_account_name = var.alb_controller_service_account_name
+  codebuild_eks_cluster_name          = module.eks.cluster_name
   tags                                = local.common_tags
 }
 
@@ -83,11 +87,17 @@ module "cicd" {
   sagemaker_training_role_arn = module.iam.sagemaker_training_role_arn
   training_input_s3_uri       = local.training_input_s3_uri
   training_output_s3_uri      = local.training_output_s3_uri
+  eks_cluster_name            = module.eks.cluster_name
+  inference_namespace         = var.inference_namespace
+  k8s_deployment_name         = "credit-risk-api"
+  k8s_container_name          = "credit-risk-api"
+  model_quality_roc_auc_min   = var.model_quality_roc_auc_min
   tags                        = local.common_tags
 }
 
+# FIX: Enabled ALB controller in dev so end-to-end flow can be tested
+#      (previously count=0 in dev made ingress impossible to validate).
 module "alb_controller" {
-  count  = var.environment == "dev" ? 0 : 1
   source = "../../modules/alb_controller"
 
   cluster_name              = module.eks.cluster_name
@@ -107,7 +117,6 @@ module "alb_controller" {
 }
 
 module "monitoring" {
-  count  = var.environment == "dev" ? 0 : 1
   source = "../../modules/monitoring"
 
   cluster_name                 = module.eks.cluster_name
@@ -115,8 +124,8 @@ module "monitoring" {
   enable_prometheus            = true
   enable_grafana               = true
   enable_metrics_server        = true
-  enable_container_insights    = var.environment == "prod"
-  log_retention_in_days        = var.environment == "prod" ? 30 : 7
+  enable_container_insights    = false
+  log_retention_in_days        = 7
   prometheus_chart_version     = var.prometheus_chart_version
   grafana_chart_version        = var.grafana_chart_version
   metrics_server_chart_version = var.metrics_server_chart_version
@@ -124,4 +133,3 @@ module "monitoring" {
 
   depends_on = [module.alb_controller]
 }
-
