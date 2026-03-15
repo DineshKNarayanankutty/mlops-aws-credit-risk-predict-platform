@@ -113,6 +113,7 @@ module "eks" {
 
   cluster_endpoint_public_access         = var.cluster_endpoint_public_access
   cluster_endpoint_private_access        = var.cluster_endpoint_private_access
+  cluster_endpoint_public_access_cidrs   = var.cluster_endpoint_public_access_cidrs
   cluster_enabled_log_types              = var.cluster_enabled_log_types
   cloudwatch_log_group_retention_in_days = local.node_group_profile.cluster_log_retention_days
 
@@ -420,4 +421,85 @@ resource "aws_iam_role_policy_attachment" "cluster_autoscaler" {
 
   role       = aws_iam_role.cluster_autoscaler[0].name
   policy_arn = aws_iam_policy.cluster_autoscaler[0].arn
+}
+
+# ── Spot node group for cost-efficient inference scale-out ───────────
+# COST OPT: Spot instances provide ~70% cost savings vs On-Demand.
+# Combined with HPA minReplicas on On-Demand, Spot handles burst capacity.
+resource "aws_eks_node_group" "inference_spot" {
+  count = var.enable_spot_node_group ? 1 : 0
+
+  cluster_name    = module.eks.cluster_name
+  node_group_name = "${var.cluster_name}-inference-spot"
+  node_role_arn   = module.eks.eks_managed_node_groups["system"].iam_role_arn
+  subnet_ids      = var.private_subnets
+
+  capacity_type  = "SPOT"
+  instance_types = ["t3.large", "t3a.large", "m5.large", "m5a.large"]
+
+  scaling_config {
+    desired_size = 0
+    min_size     = 0
+    max_size     = 10
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  launch_template {
+    name    = aws_launch_template.inference_spot[0].name
+    version = aws_launch_template.inference_spot[0].latest_version
+  }
+
+  labels = {
+    "node-role"     = "inference"
+    "capacity-type" = "spot"
+    "workload"      = "inference"
+  }
+
+  taint {
+    key    = "workload"
+    value  = "inference"
+    effect = "NO_SCHEDULE"
+  }
+
+  tags = merge(local.base_tags, {
+    "k8s.io/cluster-autoscaler/enabled"             = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+  })
+
+  depends_on = [module.eks]
+}
+
+resource "aws_launch_template" "inference_spot" {
+  count = var.enable_spot_node_group ? 1 : 0
+
+  name_prefix = "${var.cluster_name}-inference-spot-"
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size           = 40
+      volume_type           = "gp3"
+      encrypted             = true
+      kms_key_id            = aws_kms_key.node_ebs.arn
+      delete_on_termination = true
+    }
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required" # IMDSv2
+    http_put_response_hop_limit = 1
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags          = merge(local.base_tags, { Name = "${var.cluster_name}-inference-spot" })
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
