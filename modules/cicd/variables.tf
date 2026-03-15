@@ -119,3 +119,38 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "eks_cluster_name" {
+  description = "EKS cluster name for the deploy stage"
+  type        = string
+}
+
+variable "inference_namespace" {
+  description = "Kubernetes namespace where the inference deployment lives"
+  type        = string
+  default     = "inference"
+}
+
+variable "k8s_deployment_name" {
+  description = "Name of the Kubernetes Deployment to update"
+  type        = string
+  default     = "credit-risk-api"
+}
+
+variable "k8s_container_name" {
+  description = "Name of the container within the Deployment"
+  type        = string
+  default     = "credit-risk-api"
+}
+
+variable "model_quality_roc_auc_min" {
+  description = "Minimum ROC-AUC score required to promote a trained model"
+  type        = number
+  default     = 0.75
+}
+
+variable "kubectl_version" {
+  description = "Pinned kubectl version for the deploy stage"
+  type        = string
+  default     = "v1.31.0"
+}
