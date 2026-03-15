@@ -56,6 +56,11 @@ resource "helm_release" "prometheus" {
   }
 
   set {
+    name  = "server.persistentVolume.storageClass"
+    value = "gp3"
+  }
+
+  set {
     name  = "alertmanager.enabled"
     value = "true"
   }
@@ -79,6 +84,11 @@ resource "helm_release" "grafana" {
     name  = "persistence.enabled"
     value = "true"
   }
+  
+  set {
+    name  = "persistence.storageClassName"
+    value = "gp3"
+  }
 
   set {
     name  = "service.type"
@@ -87,7 +97,27 @@ resource "helm_release" "grafana" {
 
   set {
     name  = "service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme"
-    value = "internal"
+    value = "true"
+  }
+
+  set {
+    name  = "sidecar.dashboards.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "sidecar.dashboards.label"
+    value = "grafana_dashboard"
+  }
+
+  set {
+    name  = "sidecar.dashboards.labelValue"
+    value = "1"
+  }
+
+  set {
+    name  = "adminPassword"
+    value = var.grafana_admin_password
   }
 
   set {
@@ -101,16 +131,15 @@ resource "helm_release" "grafana" {
 resource "helm_release" "metrics_server" {
   count = var.enable_metrics_server ? 1 : 0
 
-  name             = "metrics-server"
-  repository       = "https://kubernetes-sigs.github.io/metrics-server/"
-  chart            = "metrics-server"
-  version          = var.metrics_server_chart_version
-  namespace        = "kube-system"
-  create_namespace = false
-  wait             = true
-  timeout          = 600
+  name       = "metrics-server"
+  repository = "https://kubernetes-sigs.github.io/metrics-server/"
+  chart      = "metrics-server"
+  version    = var.metrics_server_chart_version
+  namespace  = "kube-system"
 
-  # Required for HPA metrics on EKS-managed kubelet endpoints.
+  wait    = true
+  timeout = 600
+
   set {
     name  = "rbac.create"
     value = "true"
@@ -121,18 +150,14 @@ resource "helm_release" "metrics_server" {
     value = "true"
   }
 
-  set {
-    name  = "args[0]"
-    value = "--kubelet-insecure-tls"
+  set_list {
+    name = "args"
+    value = [
+      "--kubelet-insecure-tls",
+      "--kubelet-preferred-address-types=InternalIP,Hostname",
+      "--metric-resolution=15s"
+    ]
   }
 
-  set {
-    name  = "args[1]"
-    value = "--kubelet-preferred-address-types=InternalIP,Hostname"
-  }
-
-  set {
-    name  = "args[2]"
-    value = "--metric-resolution=15s"
-  }
+  depends_on = [kubernetes_namespace.monitoring]
 }
