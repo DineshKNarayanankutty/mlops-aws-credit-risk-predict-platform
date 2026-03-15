@@ -3,10 +3,11 @@ module "vpc" {
 
   environment          = var.environment
   project_name         = var.project_name
-  cluster_name         = var.cluster_name   # FIX C-07: needed for subnet discovery tags
+  cluster_name         = var.cluster_name # FIX C-07: needed for subnet discovery tags
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
+  enable_vpc_flow_logs = local.enable_vpc_flow_logs
   tags                 = local.common_tags
 }
 
@@ -18,8 +19,9 @@ module "eks" {
   cluster_version                 = var.cluster_version
   vpc_id                          = module.vpc.vpc_id
   private_subnets                 = module.vpc.private_subnets
-  node_instance_type              = var.node_instance_type
-  inference_node_instance_type    = var.inference_node_instance_type
+  node_instance_type              = local.system_node_instance_type
+  inference_node_instance_type    = local.inference_node_instance_type
+  enable_spot_node_group          = local.enable_spot_nodes
   cluster_endpoint_public_access  = var.cluster_endpoint_public_access
   cluster_endpoint_private_access = var.cluster_endpoint_private_access
   # FIX: Restrict public API endpoint to known CIDRs (set in tfvars)
@@ -95,9 +97,8 @@ module "cicd" {
   tags                        = local.common_tags
 }
 
-# FIX: Enabled ALB controller in dev so end-to-end flow can be tested
-#      (previously count=0 in dev made ingress impossible to validate).
 module "alb_controller" {
+  count  = local.enable_alb_controller ? 1 : 0
   source = "../../modules/alb_controller"
 
   cluster_name              = module.eks.cluster_name
@@ -117,15 +118,16 @@ module "alb_controller" {
 }
 
 module "monitoring" {
+  count  = local.enable_monitoring ? 1 : 0
   source = "../../modules/monitoring"
 
   cluster_name                 = module.eks.cluster_name
   namespace                    = var.monitoring_namespace
-  enable_prometheus            = true
-  enable_grafana               = true
-  enable_metrics_server        = true
-  enable_container_insights    = false
-  log_retention_in_days        = 7
+  enable_prometheus            = local.monitoring_enable_prometheus
+  enable_grafana               = local.monitoring_enable_grafana
+  enable_metrics_server        = local.monitoring_enable_metrics_server
+  enable_container_insights    = local.monitoring_enable_container_insights
+  log_retention_in_days        = local.monitoring_log_retention_in_days
   prometheus_chart_version     = var.prometheus_chart_version
   grafana_chart_version        = var.grafana_chart_version
   metrics_server_chart_version = var.metrics_server_chart_version
