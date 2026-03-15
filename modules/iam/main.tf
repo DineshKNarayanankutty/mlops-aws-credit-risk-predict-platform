@@ -193,6 +193,18 @@ data "aws_iam_policy_document" "codebuild" {
     resources = [aws_iam_role.sagemaker_training.arn]
   }
 
+  statement {
+    sid    = "EKSDescribeAndUpdate"
+    effect = "Allow"
+    actions = [
+      "eks:DescribeCluster",
+    ]
+    resources = [
+      "arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.codebuild_eks_cluster_name}"
+    ]
+  }
+
+
 }
 
 resource "aws_iam_policy" "codebuild" {
