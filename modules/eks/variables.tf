@@ -125,3 +125,15 @@ variable "tags" {
   default = {}
 }
 
+
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "List of CIDRs allowed to reach the public EKS API endpoint"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "enable_spot_node_group" {
+  description = "Add a Spot instance node group for cost-efficient inference scale-out"
+  type        = bool
+  default     = false
+}
