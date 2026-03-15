@@ -68,3 +68,10 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "grafana_admin_password" {
+  description = "Grafana admin password — use SSM Parameter Store in prod"
+  type        = string
+  default     = "ChangeMe!Prod"
+  sensitive   = true
+}
