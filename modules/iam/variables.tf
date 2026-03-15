@@ -77,3 +77,8 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "codebuild_eks_cluster_name" {
+  description = "EKS cluster name that CodeBuild needs to describe and update"
+  type        = string
+}
