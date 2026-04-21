@@ -27,6 +27,16 @@ module "eks" {
   tags                                 = local.common_tags
 }
 
+module "ssm_access" {
+  source = "../../modules/ssm_access"
+
+  vpc_id                        = module.vpc.vpc_id
+  private_subnet_ids            = module.vpc.private_subnets
+  eks_cluster_security_group_id = module.eks.cluster_security_group_id
+  instance_type                 = "t3.micro"
+  tags                          = local.common_tags
+}
+
 module "ecr" {
   source          = "../../modules/ecr"
   repository_name = local.ecr_repository_name
