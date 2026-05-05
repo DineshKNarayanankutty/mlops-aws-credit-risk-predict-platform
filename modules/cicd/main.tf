@@ -206,7 +206,7 @@ resource "aws_codebuild_project" "build_and_push" {
         pre_build:
           commands:
             - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-            - IMAGE_TAG=$${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+            - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
             - IMAGE_URI=${var.ecr_repository_url}:$${IMAGE_TAG}
             - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${split("/", var.ecr_repository_url)[0]}
         build:
